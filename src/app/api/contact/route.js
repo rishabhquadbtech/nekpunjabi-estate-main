@@ -10,27 +10,27 @@ const handler = async (req, res) => {
 
   const { name, phone, location, recaptchaToken } = req.body;
 
-  // Validate the data
+
   if (!phone) {
     return res.status(400).json({ message: 'Phone number is required' });
   }
 
-  // If reCAPTCHA token is provided, verify it
+
   if (recaptchaToken) {
     try {
-      // Verify reCAPTCHA v2 token with Google
+
       const recaptchaResponse = await axios.post(
         `https://www.google.com/recaptcha/api/siteverify`,
         null,
         {
           params: {
-            secret: process.env.RECAPTCHA_SECRET_KEY, // Your reCAPTCHA v2 secret key
-            response: recaptchaToken, // The token from the frontend
+            secret: process.env.RECAPTCHA_SECRET_KEY, 
+            response: recaptchaToken, 
           },
         }
       );
 
-      // If reCAPTCHA verification fails, return error
+     
       if (!recaptchaResponse.data.success) {
         return res.status(400).json({ message: 'reCAPTCHA verification failed' });
       }
@@ -40,10 +40,10 @@ const handler = async (req, res) => {
     }
   }
 
-  // Generate the email content depending on the fields provided
+
   const emailContent = generateEmailContent({ name, phone, location });
 
-  // Simulate sending email (you can replace with Nodemailer code)
+
   try {
     await transporter.sendMail({
       ...mailOptions,
