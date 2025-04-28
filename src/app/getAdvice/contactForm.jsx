@@ -1,23 +1,21 @@
+// ContactForm.js
 'use client';
 
-// This is my conteact form
-
 import { useState } from 'react';
-import { sendContactForm } from './sendContactForm';
-import CustAlert from './CustAlert';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import Image from 'next/image';
+import ReCAPTCHA from 'react-google-recaptcha'; // Import reCAPTCHA v2
+import { sendContactForm } from './sendContactForm'; // Function to send form data to API
+import CustAlert from './CustAlert'; // Alert component to show success or error messages
+import Image from 'next/image'; // To keep the Image as per original code
 
 export default function ContactForm() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
+  const [recaptchaValue, setRecaptchaValue] = useState(null); // Store reCAPTCHA token
   const [errors, setErrors] = useState({});
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('');
   const [showAlert, setShowAlert] = useState(false);
-
-  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,20 +26,16 @@ export default function ContactForm() {
     if (!name.trim()) newErrors.name = 'Required';
     if (!phone.trim()) newErrors.phone = 'Required';
     if (!location.trim()) newErrors.location = 'Required';
+    if (!recaptchaValue) newErrors.recaptcha = 'Please verify that you are human'; // Ensure reCAPTCHA is verified
 
     setErrors(newErrors);
 
-    if (Object.keys(newErrors).length > 0) return;
+    if (Object.keys(newErrors).length > 0) return; // If there are errors, stop submission
 
-    const formData = { name, phone, location };
-
-    let gRecaptchaToken = null;
-    if (executeRecaptcha) {
-      gRecaptchaToken = await executeRecaptcha('contactFormSubmit');
-    }
+    const formData = { name, phone, location, recaptchaToken: recaptchaValue };
 
     try {
-      await sendContactForm(formData, gRecaptchaToken);
+      await sendContactForm(formData);
       setAlertMessage('Your message has been sent!');
       setAlertType('success');
       setShowAlert(true);
@@ -49,13 +43,14 @@ export default function ContactForm() {
       setPhone('');
       setLocation('');
       setErrors({});
+      setRecaptchaValue(null); // Reset reCAPTCHA after submission
     } catch (error) {
       setAlertMessage('Failed to send message. Please try again.');
       setAlertType('error');
       setShowAlert(true);
     }
 
-    setTimeout(() => setShowAlert(false), 5000);
+    setTimeout(() => setShowAlert(false), 5000); // Auto-hide alert after 5 seconds
   };
 
   const inputStyle = {
@@ -113,7 +108,11 @@ export default function ContactForm() {
                 If you’d like to know more information about us, please get in touch.
               </p>
             </div>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4" style={{ flex: 1, maxWidth: '552px', padding: '2rem' }}>
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-4"
+              style={{ flex: 1, maxWidth: '552px', padding: '2rem' }}
+            >
               <input
                 type="text"
                 placeholder="Your Name"
@@ -140,6 +139,13 @@ export default function ContactForm() {
                 style={inputStyle}
               />
               {errors.location && <div style={errorTextStyle}>{errors.location}</div>}
+
+              {/* Add reCAPTCHA v2 widget here */}
+              <ReCAPTCHA
+                sitekey="your-recaptcha-site-key"  // Replace with your reCAPTCHA v2 site key
+                onChange={(value) => setRecaptchaValue(value)} // Store the reCAPTCHA token
+              />
+              {errors.recaptcha && <div style={errorTextStyle}>{errors.recaptcha}</div>}
 
               <button
                 type="submit"
