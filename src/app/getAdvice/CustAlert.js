@@ -3,44 +3,44 @@ import React from 'react';
 
 const CustAlert = ({ message, onClose, type }) => {
   // Determine styles based on alert type
-  const alertStyles = type === 'success'
-    ? { backgroundColor: '#28a745', borderColor: '#28a745' } // Green for success
-    : { backgroundColor: '#dc3545', borderColor: '#dc3545' }; // Red for error
+  const alertStyles = { backgroundColor: 'white', borderColor: 'black' } // Green for success
 
-  const iconColor = type === 'success' ? '#ffffff' : '#ffffff'; // White tick or cross icon color
-  const iconBackground = type === 'success' ? '#3498db' : '#dc3545'; // Blue for success, red for error
+
+  const iconColor = type === 'success' ? '#ffffff' : '#ffffff'; 
+  const iconBackground = type === 'success' ? '#3498db' : '#dc3545'; 
 
   const iconPath = type === 'success'
-    ? 'M5 13l4 4L19 7' // Check mark
-    : 'M6 18L18 6M6 6l12 12'; // Cross mark for error
+    ? 'M5 13l4 4L19 7' 
+    : 'M6 18L18 6M6 6l12 12'; 
 
   return (
     <div
-      className="fixed top-4 right-4 p-4 w-96 rounded-lg shadow-lg flex flex-col items-center justify-center"
+      className="fixed top-4 right-4 p-4 w-96 rounded-lg shadow-lg flex flex-col items-center justify-center "
       style={{
+        zIndex:100,
         paddingTop: '20px',
         paddingBottom: '20px',
         paddingLeft: '40px',
         paddingRight: '40px',
-        backgroundColor: alertStyles.backgroundColor, // Dynamic background color
-        borderColor: alertStyles.borderColor, // Dynamic border color
+        backgroundColor: alertStyles.backgroundColor, 
+        borderColor: alertStyles.borderColor,
       }}
       role="alert"
     >
-      {/* Circle with Tick or Cross */}
+    
       <div
         className="flex items-center justify-center mb-4"
         style={{
           width: '50px',
           height: '50px',
           borderRadius: '50%',
-          backgroundColor: iconBackground, // Dynamic background color
+          backgroundColor: iconBackground, 
         }}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
-          stroke={iconColor} // White color for tick or cross
+          stroke={iconColor} 
           viewBox="0 0 24 24"
           width="24"
           height="24"
@@ -49,7 +49,7 @@ const CustAlert = ({ message, onClose, type }) => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2"
-            d={iconPath} // Dynamic icon path based on success or error
+            d={iconPath} 
           />
         </svg>
       </div>

@@ -1,6 +1,8 @@
-// src/app/api/contact/route.js
+import axios from 'axios';
+import { mailOptions } from '@/app/config/nodemailerManager';
+import { transporter } from '@/app/config/nodemailerManager';
 
-import { mailOptions, transporter } from "../../../config/nodemailer";  // Update with correct path if needed
+ // Update with correct path if needed
 
 const CONTACT_MESSAGE_FIELDS = {
   name: "Name",
@@ -11,8 +13,7 @@ const CONTACT_MESSAGE_FIELDS = {
 // Helper function to generate email content
 const generateEmailContent = (data) => {
   const stringData = Object.entries(data).reduce(
-    (str, [key, val]) =>
-      (str += `${CONTACT_MESSAGE_FIELDS[key]}: \n${val} \n\n`),
+    (str, [key, val]) => (str += `${CONTACT_MESSAGE_FIELDS[key]}: \n${val} \n\n`),
     ""
   );
 
@@ -25,8 +26,7 @@ const generateEmailContent = (data) => {
 
   return {
     text: stringData,
-    html: `
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    html: `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
         body { font-family: Arial, sans-serif; }
         .form-container { padding: 20px; border: 1px dashed #ccc; }
         .form-heading { font-size: 18px; margin-bottom: 5px; }
@@ -34,8 +34,7 @@ const generateEmailContent = (data) => {
       </style></head><body>
         <h2>New Contact Message</h2>
         <div class="form-container">${htmlData}</div>
-      </body></html>
-    `,
+      </body></html>`,
   };
 };
 
@@ -46,13 +45,32 @@ const handler = async (req, res) => {
   }
 
   const data = req.body;
+  const { gRecaptchaToken } = data;
 
-  if (!data.name || !data.number || !data.location) {
-    return res.status(400).json({ message: "Missing required fields" });
+  // Ensure all fields are filled
+  if (!data.name || !data.phone || !data.location) {
+    return res.status(400).json({ message: "All fields are required when reCAPTCHA token is present" });
   }
 
+  // If reCAPTCHA token is provided and name/location are filled, verify it
+  if (gRecaptchaToken) {
+    try {
+      const recaptchaResponse = await axios.post(
+        `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${gRecaptchaToken}`
+      );
+
+      // If reCAPTCHA verification fails, return error
+      if (!recaptchaResponse.data.success || recaptchaResponse.data.score < 0.5) {
+        return res.status(400).json({ message: "reCAPTCHA verification failed" });
+      }
+    } catch (err) {
+      console.log("route.jsx !!!❌❌❌❌❌❌❌❌❌❌❌❌❌❌")
+      return res.status(500).json({ message: "Error verifying reCAPTCHA", error: err.message });
+    }
+  }
+
+  // Send the email only if reCAPTCHA is verified successfully or not required
   try {
-    // Send the email
     await transporter.sendMail({
       ...mailOptions,
       ...generateEmailContent(data),
@@ -62,6 +80,7 @@ const handler = async (req, res) => {
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error("Email error:", err);
+    console.log("rout.jsx after verifying captcha !!!❌❌❌❌❌❌❌❌❌❌❌❌❌❌")
     return res.status(500).json({ message: "Email failed to send", error: err.message });
   }
 };
